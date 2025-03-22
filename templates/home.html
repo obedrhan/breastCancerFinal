@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 450px;
+        }
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #333333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="file"],
+        input[type="text"] {
+            display: block;
+            margin: 0 auto 15px auto;
+            padding: 8px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button,
+        a {
+            width: 100%; /* Ensure all buttons and links have the same width */
+            padding: 12px;
+            font-size: 16px;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: block;
+            text-decoration: none; /* For links styled as buttons */
+        }
+        button:hover,
+        a:hover {
+            background-color: #0056b3;
+        }
+        button i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        a.logout {
+            background-color: #dc3545;
+        }
+        a.logout:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Operations Page</h1>
+
+        <!-- Form for Uploading a Mammogram -->
+        <div class="form-group">
+            <form method="POST" action="/process" enctype="multipart/form-data">
+                <label for="patient_name">Patient Name:</label>
+                <input type="text" id="patient_name" name="patient_name" placeholder="Enter Patient Name" required>
+
+                <label for="file">Upload Mammogram:</label>
+                <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.pgm" required>
+
+                <button type="submit">
+                    <i class="fa fa-eye"></i> View Mammogram and Cancer Result
+                </button>
+            </form>
+        </div>
+
+        <!-- Form to View Previous Mammograms -->
+        <div class="form-group">
+            <form method="GET" action="/view_previous">
+                <button type="submit">
+                    <i class="fa fa-list"></i> View Previous Mammograms
+                </button>
+            </form>
+        </div>
+
+        <!-- Logout Button -->
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</body>
+</html>
