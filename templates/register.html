@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radiologist Registration</title>
-    <link rel="stylesheet" href="static/css/style.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,75 +16,123 @@
             align-items: center;
             height: 100vh;
         }
+
         .container {
             background: #ffffff;
-            padding: 20px 30px;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
             width: 400px;
+            text-align: center;
         }
+
         h1 {
             font-size: 24px;
             margin-bottom: 20px;
             color: #333333;
         }
+
+        .flash-messages {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .flash-messages p.success {
+            color: green;
+        }
+
+        .flash-messages p.danger {
+            color: red;
+        }
+
         form {
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
+
         .form-group {
             margin-bottom: 15px;
-            width: 100%;
             text-align: left;
         }
+
         label {
             font-weight: bold;
             margin-bottom: 5px;
             display: block;
         }
+
         input {
             width: 100%;
             padding: 10px;
             border: 1px solid #cccccc;
             border-radius: 5px;
             font-size: 14px;
+            box-sizing: border-box;
         }
-        button {
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-container input {
+            padding-right: 80px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            color: #007bff;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .toggle-password:hover {
+            background-color: #e8f0fe;
+            color: #0056b3;
+        }
+
+        button[type="submit"] {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             font-size: 16px;
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
         }
-        button:hover {
+
+        button[type="submit"]:hover {
             background-color: #218838;
         }
+
         .nav-links {
             margin-top: 15px;
         }
+
         .nav-links a {
             font-size: 14px;
             color: #007bff;
             text-decoration: none;
         }
+
         .nav-links a:hover {
             text-decoration: underline;
         }
-        .flash-messages {
-            margin-bottom: 10px;
-            color: red;
-            font-size: 14px;
-        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Register as a Radiologist</h1>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flash-messages">
@@ -94,28 +142,38 @@
         </div>
         {% endif %}
         {% endwith %}
+
         <form method="POST" action="/register">
             <div class="form-group">
                 <label for="fullname">Full Name:</label>
                 <input type="text" id="fullname" name="fullname" required>
             </div>
             <div class="form-group">
-                <label for="diploma_number">Diploma Number:</label>
-                <input type="text" id="diploma_number" name="diploma_number" required>
-            </div>
-            <div class="form-group">
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" required>
             </div>
-            <div class="form-group">
+            <div class="form-group password-container">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
+                <button type="button" class="toggle-password" onclick="togglePassword()">Show</button>
             </div>
             <button type="submit">Register</button>
         </form>
+
         <div class="nav-links">
             <a href="/">Back to Homepage</a>
         </div>
     </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.toggle-password');
+            const isHidden = passwordInput.type === "password";
+            passwordInput.type = isHidden ? "text" : "password";
+            toggleBtn.textContent = isHidden ? "Hide" : "Show";
+        }
+    </script>
 </body>
+
 </html>

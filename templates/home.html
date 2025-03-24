@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operations</title>
-    <link rel="stylesheet" href="static/css/style.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -39,7 +39,9 @@
             margin-bottom: 10px;
         }
         input[type="file"],
-        input[type="text"] {
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
             display: block;
             margin: 0 auto 15px auto;
             padding: 8px;
@@ -50,7 +52,7 @@
         }
         button,
         a {
-            width: 100%; /* Ensure all buttons and links have the same width */
+            width: 100%;
             padding: 12px;
             font-size: 16px;
             text-align: center;
@@ -61,7 +63,7 @@
             cursor: pointer;
             margin-bottom: 15px;
             display: block;
-            text-decoration: none; /* For links styled as buttons */
+            text-decoration: none;
         }
         button:hover,
         a:hover {
@@ -79,30 +81,38 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>Welcome to the Operations Page</h1>
+        <h1>Upload Mammogram for Classification</h1>
 
-        <!-- Form for Uploading a Mammogram -->
+        <!-- Mammogram Upload Form -->
         <div class="form-group">
             <form method="POST" action="/process" enctype="multipart/form-data">
-                <label for="patient_name">Patient Name:</label>
-                <input type="text" id="patient_name" name="patient_name" placeholder="Enter Patient Name" required>
 
-                <label for="file">Upload Mammogram:</label>
-                <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.pgm" required>
+                <label for="patient_name">Patient Full Name:</label>
+                <input type="text" id="patient_name" name="patient_name" placeholder="Enter Full Name" required>
+
+                <label for="national_id">National ID Number:</label>
+                <input type="text" id="national_id" name="national_id" placeholder="Enter National ID" required>
+
+                <label for="dob">Date of Birth:</label>
+                <input type="date" id="dob" name="dob" required>
+
+                <label for="file">Upload Mammogram Image:</label>
+                <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.pgm,.dcm" required>
 
                 <button type="submit">
-                    <i class="fa fa-eye"></i> View Mammogram and Cancer Result
+                    <i class="fa fa-upload"></i> Upload & Classify
                 </button>
             </form>
         </div>
 
-        <!-- Form to View Previous Mammograms -->
+        <!-- View Previous Results -->
         <div class="form-group">
             <form method="GET" action="/view_previous">
                 <button type="submit">
-                    <i class="fa fa-list"></i> View Previous Mammograms
+                    <i class="fa fa-list"></i> View Previous Classifications
                 </button>
             </form>
         </div>
@@ -111,4 +121,5 @@
         <a href="/logout" class="logout">Logout</a>
     </div>
 </body>
+
 </html>

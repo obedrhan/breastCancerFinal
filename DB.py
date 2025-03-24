@@ -1,51 +1,49 @@
 import sqlite3
 
 def create_database():
-    # Connect to SQLite database (creates file if it doesn't exist)
     conn = sqlite3.connect('radiologist_system.db')
     cursor = conn.cursor()
 
-    # Create Radiologists table
+    # Radiologists table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS Radiologists (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fullname TEXT NOT NULL,
-            diploma_number TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
-    # Create Patients table
+    # Patients table (national_id as PRIMARY KEY)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS Patients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            national_id TEXT PRIMARY KEY,
             radiologist_id INTEGER NOT NULL,
             fullname TEXT NOT NULL,
-            patient_id TEXT UNIQUE NOT NULL,
-            dob DATE NOT NULL,
-            FOREIGN KEY (radiologist_id) REFERENCES Radiologists (id)
+            dob TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (radiologist_id) REFERENCES Radiologists (id) ON DELETE CASCADE
         )
     ''')
 
-    # Create ClassificationResults table
+    # Classification Results table (linked to national_id now)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS ClassificationResults (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            patient_id INTEGER NOT NULL,
+            national_id TEXT NOT NULL,
             radiologist_id INTEGER NOT NULL,
             classification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            prediction TEXT NOT NULL,
+            prediction TEXT NOT NULL CHECK (prediction IN ('BENIGN', 'MALIGNANT')),
             confidence REAL NOT NULL,
-            FOREIGN KEY (patient_id) REFERENCES Patients (id),
-            FOREIGN KEY (radiologist_id) REFERENCES Radiologists (id)
+            FOREIGN KEY (national_id) REFERENCES Patients (national_id) ON DELETE CASCADE,
+            FOREIGN KEY (radiologist_id) REFERENCES Radiologists (id) ON DELETE CASCADE
         )
     ''')
 
-    # Commit changes and close the connection
     conn.commit()
     conn.close()
-    print("Database and tables created successfully.")
+    print("✅ Database updated successfully.")
 
 if __name__ == "__main__":
     create_database()

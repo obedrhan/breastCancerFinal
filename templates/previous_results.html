@@ -30,6 +30,7 @@
             justify-content: center;
             margin-bottom: 20px;
             gap: 10px;
+            flex-wrap: wrap;
         }
         input[type="text"] {
             padding: 8px;
@@ -84,6 +85,7 @@
             display: flex;
             justify-content: center;
             gap: 20px;
+            flex-wrap: wrap;
         }
         a {
             padding: 10px 20px;
@@ -101,6 +103,15 @@
         .logout-btn:hover {
             background-color: #c82333;
         }
+        /* Conditional styling for predictions */
+        .benign {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .malignant {
+            color: #dc3545;
+            font-weight: bold;
+        }
         @media (max-width: 768px) {
             table {
                 display: block;
@@ -109,6 +120,9 @@
             }
             input[type="text"] {
                 width: 100%;
+            }
+            body {
+                padding-bottom: 40px;
             }
         }
     </style>
@@ -135,7 +149,9 @@
         <tr>
             <td>{{ result[3] }}</td>
             <td>{{ result[0] }}</td>
-            <td>{{ result[1] }}</td>
+            <td class="{% if result[1] == 'BENIGN' %}benign{% else %}malignant{% endif %}">
+                {{ result[1] }}
+            </td>
             <td>{{ result[2] }}</td>
         </tr>
         {% endfor %}
