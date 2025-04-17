@@ -1,21 +1,23 @@
+import os
 import pandas as pd
 import joblib
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 
 def load_data(features_file):
     """
-    Load LBP features and normalize labels (benign vs malignant).
+    Load features and normalize labels (benign vs malignant).
     """
     data = pd.read_csv(features_file)
 
-    # Normalize labels
     def normalize_label(label):
         label = label.lower()
         if "malignant" in label:
             return "malignant"
         elif "benign" in label:
+            return "benign"
+        elif "callback" in label:  # covers 'benign_without_callback'
             return "benign"
         else:
             return "unknown"
@@ -27,7 +29,10 @@ def load_data(features_file):
     y = data["Label"].values
     return X, y
 
-def train_random_forest(X_train, y_train):
+def train_random_forest(X, y):
+    """
+    Train Random Forest with hyperparameter tuning.
+    """
     param_grid = {
         'n_estimators': [50, 100, 200],
         'max_depth': [None, 10, 20],
@@ -37,31 +42,28 @@ def train_random_forest(X_train, y_train):
 
     rf = RandomForestClassifier(random_state=42)
     grid_search = GridSearchCV(rf, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
-    grid_search.fit(X_train, y_train)
+    grid_search.fit(X, y)
 
-    print(f"Best Parameters: {grid_search.best_params_}")
-    print(f"Best Cross-Validation Accuracy: {grid_search.best_score_:.4f}")
+    print(f"✅ Best Parameters: {grid_search.best_params_}")
+    print(f"✅ Best Cross-Validation Accuracy: {grid_search.best_score_:.4f}")
 
     return grid_search.best_estimator_
 
 if __name__ == "__main__":
-    features_file = "/data/lbp_features_with_labels.csv"
+    features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/lbp_features_with_labels.csv"
+    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models"
 
-    print("Loading dataset...")
+    print("📦 Loading full dataset...")
     X, y = load_data(features_file)
 
-    print("Splitting data into training and testing sets...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-    # Standardize (optional for RF but good for consistency)
+    print("📊 Scaling all data...")
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    X_scaled = scaler.fit_transform(X)
 
-    print("Training Random Forest model with hyperparameter tuning...")
-    rf_model = train_random_forest(X_train, y_train)
+    print("🌲 Training Random Forest on entire dataset...")
+    rf_model = train_random_forest(X_scaled, y)
 
-    print("Saving the trained model and scaler...")
-    joblib.dump(rf_model, "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/random_forest_model_ddsm.pkl")
-    joblib.dump(scaler, "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/scaler_rf.pkl")
+    print("💾 Saving model and scaler...")
+    joblib.dump(rf_model, os.path.join(model_dir, "random_forest_lbp.pkl"))
+    joblib.dump(scaler, os.path.join(model_dir, "scaler_rf_lbp.pkl"))
     print("✅ Random Forest model and scaler saved.")

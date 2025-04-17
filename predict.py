@@ -27,7 +27,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 scaler = joblib.load(SCALER_PATH)
 rf_model = joblib.load(RF_MODEL_PATH)
 
-# ✅ Correct: Load ResNet18 instead of DenseNet
 resnet = models.resnet18(pretrained=False)
 resnet.fc = nn.Linear(resnet.fc.in_features, 2)
 resnet.load_state_dict(torch.load(RESNET_MODEL_PATH, map_location=device))
@@ -46,14 +45,11 @@ def predict_mammogram(image_path):
     _, contours = contour_extraction(refined)
     cropped_img = crop_image_with_contours(original_image, contours)
 
-    # LBP + Random Forest
-    # Traditional ML Pipeline
     lbp_hist = compute_lbp(cropped_img)
     lbp_scaled = scaler.transform([lbp_hist])
     ml_pred = rf_model.predict(lbp_scaled)[0]
     ml_conf = rf_model.predict_proba(lbp_scaled).max() * 100
 
-    # Mapping RF output here!
     if ml_pred in [0, "0", "BENIGN", "BENIGN_WITHOUT_CALLBACK"]:
         ml_pred = "BENIGN"
     else:
@@ -85,8 +81,8 @@ def predict_mammogram(image_path):
             "confidence": round(ml_conf, 2),
             "model": "Random Forest"
         }
-"""
+
 if __name__ == "__main__":
-    test_img = "/path/to/test_image.dcm"
+    test_img = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/DDSM_IMAGES/CBIS-DDSM/Calc-Test_P_00077_RIGHT_CC/08-29-2017-DDSM-NA-38195/1.000000-full mammogram images-87486/1-1.dcm"
     result = predict_mammogram(test_img)
-    print(result)"""
+    print(result)

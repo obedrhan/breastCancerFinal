@@ -2,12 +2,12 @@ import os
 import pandas as pd
 import re
 
-# Define base directory
+
 base_dir = "DDSM_IMAGES/CBIS-DDSM"
 output_csv = "all_files_in_ddsm.csv"
 final_output_csv = "all_files_with_labels.csv"
 
-# Step 1: Recursively scan all folders and files
+#  Recursively scan all folders and files
 def walk_and_record_all_files(base_dir):
     all_records = []
     for root, dirs, files in os.walk(base_dir):
@@ -23,7 +23,7 @@ def walk_and_record_all_files(base_dir):
             })
     return pd.DataFrame(all_records)
 
-# Step 2: Load description datasets
+
 calc_test_path = "DDSM_IMAGES/calc_case_description_test_set.csv"
 calc_train_path = "DDSM_IMAGES/calc_case_description_train_set.csv"
 mass_test_path = "DDSM_IMAGES/mass_case_description_test_set.csv"
@@ -56,16 +56,16 @@ def extract_view(path):
 description_df["patient_id"] = description_df["full_image_path"].apply(extract_patient_id)
 description_df["view"] = description_df["full_image_path"].apply(extract_view)
 
-# Step 3: Scan directory and record all files
+#  Scan directory and record all files
 ddsm_df = walk_and_record_all_files(base_dir)
 ddsm_df.to_csv(output_csv, index=False)
 print(f"✅ All file paths and names recorded to {output_csv}")
 
-# Step 4: Extract patient_id and view from file structure
+# Extract patient_id and view from file structure
 ddsm_df["patient_id"] = ddsm_df["relative_path"].apply(extract_patient_id)
 ddsm_df["view"] = ddsm_df["relative_path"].apply(extract_view)
 
-# Step 5: Optimized merge using patient_id and view
+#  Optimized merge using patient_id and view
 final_df = ddsm_df.merge(description_df, on=["patient_id", "view"], how="left")
 final_df.to_csv(final_output_csv, index=False)
 print(f"✅ Labeled dataset created: {final_output_csv}")

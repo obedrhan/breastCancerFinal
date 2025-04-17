@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     # Save to CSV
     if len(feature_matrix) == 0:
-        print("❌ No features extracted. Please check your file paths.")
+        print(" No features extracted. Please check your file paths.")
     else:
         columns = [f"Feature_{i+1}" for i in range(len(feature_matrix[0]))]
         feature_matrix_df = pd.DataFrame(feature_matrix, columns=columns)

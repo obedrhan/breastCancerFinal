@@ -6,43 +6,9 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 import torchvision.models as models
 from torch.utils.data import Dataset, DataLoader
-from PIL import Image
-import pydicom
-import numpy as np
 
+from cnn_training import MammogramDataset
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-
-class MammogramDataset(Dataset):
-    def __init__(self, dataframe, transform=None):
-        self.dataframe = dataframe
-        self.transform = transform
-        self.dataframe['pathology'] = self.dataframe['pathology'].replace('BENIGN_WITHOUT_CALLBACK', 'BENIGN')
-        self.dataframe['label'] = self.dataframe['pathology'].map({'BENIGN': 0, 'MALIGNANT': 1})
-
-    def __len__(self):
-        return len(self.dataframe)
-
-    def __getitem__(self, idx):
-        relative_path = self.dataframe.iloc[idx]['full_path']
-        img_path = os.path.join(BASE_DIR, relative_path)
-        label = self.dataframe.iloc[idx]['label']
-
-        try:
-            dicom = pydicom.dcmread(img_path, force=True)
-            img_array = dicom.pixel_array.astype(np.float32)
-        except Exception as e:
-            print(f"❌ Skipping corrupted DICOM file: {img_path} | Error: {e}")
-            return self.__getitem__(np.random.randint(0, len(self.dataframe)))
-
-        img_array -= img_array.min()
-        img_array /= (img_array.max() + 1e-6)
-        img_array *= 255.0
-        img_array = img_array.astype(np.uint8)
-        image = Image.fromarray(img_array)
-
-        if self.transform:
-            image = self.transform(image)
-        return image, label
 
 # CSV Split
 csv_path = os.path.join(BASE_DIR, 'full_mammogram_paths.csv')
@@ -95,7 +61,7 @@ for epoch in range(EPOCHS):
         total_train += labels.size(0)
 
     train_acc = correct_train / total_train * 100
-    print(f"✅ Train Accuracy: {train_acc:.2f}%")
+    print(f" Train Accuracy: {train_acc:.2f}%")
 
 # Evaluation
 print("\n🧪 Evaluating on test set...")
@@ -109,7 +75,7 @@ with torch.no_grad():
         correct_test += (preds == labels).sum().item()
         total_test += labels.size(0)
 
-print(f"🎯 ✅ Final Test Accuracy: {correct_test / total_test * 100:.2f}%")
+print(f" Final Test Accuracy: {correct_test / total_test * 100:.2f}%")
 
-torch.save(densenet.state_dict(), '/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/densenet121_full_mammo.pth')
-print("💾 DenseNet-121 model saved!")
+torch.save(densenet.state_dict(), '/models/deep_learning/densenet121_full_mammo.pth')
+print(" DenseNet-121 model saved!")

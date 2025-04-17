@@ -10,7 +10,10 @@ import numpy as np
 
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
 
-# Dataset
+# Define the segmented images directory
+SEGMENTED_DIR = os.path.join(BASE_DIR, 'segmented_output')
+
+
 class MammogramDataset(Dataset):
     def __init__(self, dataframe, transform=None):
         self.dataframe = dataframe
@@ -23,27 +26,22 @@ class MammogramDataset(Dataset):
 
     def __getitem__(self, idx):
         relative_path = self.dataframe.iloc[idx]['full_path']
-        img_path = os.path.join(BASE_DIR, relative_path)
+
+        flat_name = relative_path.replace("/", "_") + "_segmented.png"
+        segmented_path = os.path.join(SEGMENTED_DIR, flat_name)
+
         label = self.dataframe.iloc[idx]['label']
 
         try:
-            dicom = pydicom.dcmread(img_path, force=True)
-            if 'PixelData' not in dicom:
-                raise ValueError("Missing PixelData")
-            img_array = dicom.pixel_array.astype(np.float32)
+            image = Image.open(segmented_path).convert("L")
         except Exception as e:
-            # fallback: pick a new random sample
+            print(f"⚠️ Failed to load image at {segmented_path}: {e}")
             new_idx = np.random.randint(0, len(self.dataframe))
             return self.__getitem__(new_idx)
 
-        # Normalize image
-        img_array -= img_array.min()
-        img_array /= (img_array.max() + 1e-6)
-        img_array *= 255.0
-        image = Image.fromarray(img_array.astype(np.uint8)).convert("L")
-
         if self.transform:
             image = self.transform(image)
+
         return image, label
 
 # Model
@@ -134,5 +132,5 @@ if __name__ == "__main__":
         train_acc = correct_train / total_train * 100
         print(f" Epoch [{epoch+1}/{EPOCHS}] Completed | Train Accuracy: {train_acc:.2f}%")
 
-    torch.save(model.state_dict(), os.path.join(BASE_DIR, 'models/custom_cnn_full_mammo.pth'))
-    print(" Model saved to models/custom_cnn_full_mammo.pth ")
+    torch.save(model.state_dict(), os.path.join(BASE_DIR, 'segmentation/models/custom_cnn_segmented.pth'))
+    print(" Model saved to models/custom_cnn.pth ")

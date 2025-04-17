@@ -2,8 +2,8 @@ import os
 import pandas as pd
 import joblib
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 def load_data(features_file):
     data = pd.read_csv(features_file)
@@ -11,12 +11,10 @@ def load_data(features_file):
     # Normalize labels
     def normalize_label(label):
         if isinstance(label, str):
-            label = label.strip().lower()
+            label = label.lower()
             if "malignant" in label:
                 return "malignant"
-            elif "benign" in label:
-                return "benign"
-            elif "benign_without_callback" in label:
+            elif "benign" in label or "benign_without_callback" in label:
                 return "benign"
             else:
                 return "unknown"
@@ -28,9 +26,9 @@ def load_data(features_file):
     data["Label"] = data["Label"].apply(normalize_label)
     data = data[data["Label"] != "unknown"]
 
-    # Encode labels (benign → 0, malignant → 1)
+    # Encode string labels to integers
     le = LabelEncoder()
-    y = le.fit_transform(data["Label"])
+    y = le.fit_transform(data["Label"])  # 'benign' → 0, 'malignant' → 1
 
     X = data.drop(columns=["Image Name", "Label"]).values
     return X, y
@@ -47,27 +45,29 @@ def train_optimized_knn(X, y):
     grid_search.fit(X, y)
 
     print(f"✅ Best Parameters: {grid_search.best_params_}")
-    print(f"📊 Best Cross-Validation Accuracy: {grid_search.best_score_:.4f}")
+    print(f"✅ Best Cross-Validation Accuracy: {grid_search.best_score_:.4f}")
 
     return grid_search.best_estimator_
 
 if __name__ == "__main__":
-    features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/lbp_features_with_labels.csv"
+    features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/hog_features_segmented.csv"
 
-    print("📂 Loading and preprocessing dataset...")
+    print("📦 Loading full HOG feature dataset...")
     X, y = load_data(features_file)
 
-    print("🔍 Scaling features...")
+    # Scale all features
+    print("🧪 Scaling full dataset...")
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    print("🤖 Training optimized KNN model with GridSearch...")
+    print("🤖 Training KNN on full dataset...")
     knn_model = train_optimized_knn(X_scaled, y)
 
-    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models"
+    # Save model + scaler
+    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/HOG"
     os.makedirs(model_dir, exist_ok=True)
 
-    print("💾 Saving model and scaler...")
-    joblib.dump(knn_model, os.path.join(model_dir, "knn_model_lbp.pkl"))
-    joblib.dump(scaler, os.path.join(model_dir, "scaler_knn_lbp.pkl"))
-    print("✅ Done! Optimized KNN model saved.")
+    joblib.dump(knn_model, os.path.join(model_dir, "knn_model_hog.pkl"))
+    joblib.dump(scaler, os.path.join(model_dir, "scaler_knn_hog.pkl"))
+
+    print("✅ KNN model and scaler saved for HOG features.")
