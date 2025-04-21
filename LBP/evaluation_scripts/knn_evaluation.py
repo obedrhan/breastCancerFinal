@@ -36,8 +36,8 @@ if __name__ == "__main__":
     # === Path Setup ===
     BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
     TEST_CSV = os.path.join(BASE_DIR, "test/test_lbp_features.csv")
-    MODEL_PATH = os.path.join(BASE_DIR, "models/knn_model_lbp.pkl")
-    SCALER_PATH = os.path.join(BASE_DIR, "models/scaler_knn_lbp.pkl")
+    MODEL_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning/knn_model_lbp.pkl")
+    SCALER_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning/scaler_knn_lbp.pkl")
 
     # === Load Test Data ===
     print("📂 Loading LBP test features...")

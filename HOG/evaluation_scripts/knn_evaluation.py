@@ -34,7 +34,7 @@ def load_test_data(csv_path):
 
 if __name__ == "__main__":
     test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/hog_features_segmented.csv"
-    model_dir = ("/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/HOG")
+    model_dir = ("/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/Segmented_deep_learning/HOG")
 
     print("📥 Loading test features...")
     X_test, y_test = load_test_data(test_csv)

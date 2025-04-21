@@ -29,7 +29,7 @@ def process_test_image(filepath):
 
 # ---------------------------- MAIN SCRIPT ---------------------------- #
 if __name__ == "__main__":
-    BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models"
+    BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/Segmented_deep_learning"
     test_csv = os.path.join(BASE_DIR, "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/full_mammogram_paths.csv")
 
     df = pd.read_csv(test_csv)

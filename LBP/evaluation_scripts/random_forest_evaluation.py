@@ -6,8 +6,8 @@ from sklearn.preprocessing import StandardScaler
 
 # === Configuration ===
 features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/test_lbp_features.csv"
-model_path = "/models/LBP/random_forest_lbp.pkl"
-scaler_path = "/models/LBP/scaler_rf_lbp.pkl"
+model_path = "/Segmented_deep_learning/LBP/random_forest_lbp.pkl"
+scaler_path = "/Segmented_deep_learning/LBP/scaler_rf_lbp.pkl"
 
 # === Load and preprocess test data ===
 def load_data(path):

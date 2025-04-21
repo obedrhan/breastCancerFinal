@@ -17,9 +17,9 @@ import torchvision.models as models
 import torch.nn as nn
 
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-SCALER_PATH = os.path.join(BASE_DIR, "models", "scaler_rf.pkl")
-RF_MODEL_PATH = os.path.join(BASE_DIR, "models", "random_forest_model_ddsm.pkl")
-RESNET_MODEL_PATH = os.path.join(BASE_DIR, "models", "resnet18_full_mammo.pth")
+SCALER_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning", "scaler_rf.pkl")
+RF_MODEL_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning", "random_forest_model_ddsm.pkl")
+RESNET_MODEL_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning", "resnet18_full_mammo.pth")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

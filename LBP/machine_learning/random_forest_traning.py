@@ -50,8 +50,8 @@ def train_random_forest(X, y):
     return grid_search.best_estimator_
 
 if __name__ == "__main__":
-    features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/lbp_features_with_labels.csv"
-    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models"
+    features_file = "/data/lbp_features_with_labels.csv"
+    model_dir = "/Segmented_deep_learning"
 
     print("📦 Loading full dataset...")
     X, y = load_data(features_file)

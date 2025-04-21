@@ -106,6 +106,6 @@ for epoch in range(EPOCHS):
 
 
 # === Save Trained Model ===
-save_path = os.path.join(BASE_DIR, 'segmentation/models/resnet18_segmented.pth')
+save_path = os.path.join(BASE_DIR, 'Segmented_deep_learning/Segmented_deep_learning/resnet18_segmented.pth')
 torch.save(resnet.state_dict(), save_path)
 print(f"✅ ResNet model saved to: {save_path}")

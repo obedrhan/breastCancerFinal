@@ -26,8 +26,8 @@ def load_test_data(test_csv_path):
 if __name__ == "__main__":
     # Paths
     test_features_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/test_lbp_features.csv"
-    model_path = "/models/LBP/svm_lbp.pkl"
-    scaler_path = "/models/LBP/scaler_svm_lbp.pkl"
+    model_path = "/Segmented_deep_learning/LBP/svm_lbp.pkl"
+    scaler_path = "/Segmented_deep_learning/LBP/scaler_svm_lbp.pkl"
 
     print("📥 Loading test features...")
     X_test, y_test = load_test_data(test_features_csv)

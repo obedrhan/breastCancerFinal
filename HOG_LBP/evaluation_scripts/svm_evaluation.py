@@ -43,7 +43,7 @@ if __name__ == "__main__":
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and model...")
-    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/models"
+    model_dir = "/HOG_LBP/HOG_LBP"
     svm_model = joblib.load(os.path.join(model_dir, "svm_model_hog_lbp.pkl"))
     scaler = joblib.load(os.path.join(model_dir, "scaler_svm_hog_lbp.pkl"))
 

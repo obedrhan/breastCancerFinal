@@ -83,5 +83,5 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
 # Save the trained model
-torch.save(densenet.state_dict(), os.path.join(BASE_DIR, 'segmentation/models/densenet121_segmented.pth'))
+torch.save(densenet.state_dict(), os.path.join(BASE_DIR, 'Segmented_deep_learning/Segmented_deep_learning/densenet121_segmented.pth'))
 print("✅ DenseNet-121 model saved!")

@@ -42,7 +42,7 @@ def train_optimized_svm(X, y):
     return grid_search.best_estimator_
 
 if __name__ == "__main__":
-    features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/lbp_features_with_labels.csv"
+    features_file = "/data/lbp_features_with_labels.csv"
 
     print("📥 Loading dataset...")
     X, y = load_data(features_file)
@@ -55,6 +55,6 @@ if __name__ == "__main__":
     svm_model = train_optimized_svm(X_scaled, y)
 
     print("💾 Saving model and scaler...")
-    joblib.dump(svm_model, "/models/LBP/svm_lbp.pkl")
-    joblib.dump(scaler, "/models/LBP/scaler_svm_lbp.pkl")
+    joblib.dump(svm_model, "/Segmented_deep_learning/LBP/svm_lbp.pkl")
+    joblib.dump(scaler, "/Segmented_deep_learning/LBP/scaler_svm_lbp.pkl")
     print("✅ SVM model and scaler saved!")

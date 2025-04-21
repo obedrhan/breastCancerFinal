@@ -43,7 +43,7 @@ if __name__ == "__main__":
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and KNN model...")
-    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/models"
+    model_dir = "/HOG_LBP/HOG_LBP"
     knn_model = joblib.load(os.path.join(model_dir, "knn_lbp_hog.pkl"))
     scaler = joblib.load(os.path.join(model_dir, "scaler_knn_hog_lbp.pkl"))
 

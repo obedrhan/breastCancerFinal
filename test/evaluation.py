@@ -1,19 +1,9 @@
-import os
-import joblib
-import torch
-import torch.nn as nn
-import torchvision.models as models
-import pandas as pd
-from torch.utils.data import DataLoader
-from sklearn.metrics import accuracy_score
-import torchvision.transforms as transforms
-
 # 🔄 Reuse Dataset & CNN class from training script
-from training_scripts.cnn_training import MammogramDataset, CustomCNN
+from training_scripts.deep_learning.cnn_training import CustomCNN
 '''
 # Base directory
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-MODELS_DIR = os.path.join(BASE_DIR, "segmentation/models")
+MODELS_DIR = os.path.join(BASE_DIR, "Segmented_deep_learning/Segmented_deep_learning")
 LBP_CSV = os.path.join(BASE_DIR, "test/test_lbp_features.csv")
 DL_CSV = os.path.join(BASE_DIR, "data/full_mammogram_paths.csv")
 
@@ -74,13 +64,13 @@ cnn = CustomCNN().to(device)
 cnn.load_state_dict(torch.load(os.path.join(MODELS_DIR, "custom_cnn_full_mammo.pth")))
 cnn.eval()
 
-resnet = models.resnet18(weights=None)
+resnet = Segmented_deep_learning.resnet18(weights=None)
 resnet.fc = nn.Linear(resnet.fc.in_features, 2)
 resnet.load_state_dict(torch.load(os.path.join(MODELS_DIR, "resnet18_full_mammo.pth"), map_location=device))
 resnet = resnet.to(device)
 resnet.eval()
 
-densenet = models.densenet121(weights=None)
+densenet = Segmented_deep_learning.densenet121(weights=None)
 densenet.classifier = nn.Linear(densenet.classifier.in_features, 2)
 densenet.load_state_dict(torch.load(os.path.join(MODELS_DIR, "densenet121_full_mammo.pth"), map_location=device))
 densenet = densenet.to(device)
@@ -98,7 +88,7 @@ def evaluate_dl(model, model_name, loader):
             total += labels.size(0)
     print(f" {model_name} Accuracy: {correct / total * 100:.2f}%")
 
-# Evaluate all DL models
+# Evaluate all DL Segmented_deep_learning
 evaluate_dl(cnn, "Custom CNN", test_loader_cnn)
 evaluate_dl(resnet, "ResNet18", test_loader_resnet)
 evaluate_dl(densenet, "DenseNet121", test_loader_resnet)'''
@@ -116,7 +106,7 @@ from PIL import Image
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
 CSV_PATH = os.path.join(BASE_DIR, "data/full_mammogram_paths.csv")
 SEGMENTED_TEST_DIR = os.path.join(BASE_DIR, "segmented_Test_output")
-MODEL_DIR = os.path.join(BASE_DIR, "segmentation/models")
+MODEL_DIR = os.path.join(BASE_DIR, "Segmented_deep_learning/Segmented_deep_learning")
 
 # === Custom CNN Model (matching training structure) ===
 class CustomCNN(nn.Module):

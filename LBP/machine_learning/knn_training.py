@@ -52,7 +52,7 @@ def train_optimized_knn(X, y):
     return grid_search.best_estimator_
 
 if __name__ == "__main__":
-    features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/lbp_features_with_labels.csv"
+    features_file = "/data/lbp_features_with_labels.csv"
 
     print("📂 Loading and preprocessing dataset...")
     X, y = load_data(features_file)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     print("🤖 Training optimized KNN model with GridSearch...")
     knn_model = train_optimized_knn(X_scaled, y)
 
-    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models"
+    model_dir = "/Segmented_deep_learning"
     os.makedirs(model_dir, exist_ok=True)
 
     print("💾 Saving model and scaler...")

@@ -67,7 +67,7 @@ if __name__ == "__main__":
     print("🚀 Training SVM on full dataset...")
     svm_model = train_optimized_svm(X_scaled, y)
 
-    model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/models"
+    model_dir = "/HOG_LBP/HOG_LBP"
     os.makedirs(model_dir, exist_ok=True)
 
     joblib.dump(svm_model, os.path.join(model_dir, "svm_model_hog_lbp.pkl"))

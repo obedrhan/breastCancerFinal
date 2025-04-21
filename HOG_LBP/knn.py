@@ -69,7 +69,7 @@ if __name__ == "__main__":
     knn_model = train_optimized_knn(X_scaled, y)
 
     # Save model and scaler
-    model_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/models"
+    model_path = "/HOG_LBP/HOG_LBP"
     os.makedirs(model_path, exist_ok=True)
 
     joblib.dump(knn_model, os.path.join(model_path, "knn_lbp_hog.pkl"))
