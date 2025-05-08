@@ -1,87 +1,105 @@
 import os
-import pandas as pd
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torchvision.transforms as transforms
-import torchvision.models as models
-from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms, models
+from torch.utils.data import DataLoader, Dataset
 from PIL import Image
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
-BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-SEGMENTED_DIR = os.path.join(BASE_DIR, 'segmented_output')
+# === Configuration ===
+print("🔧 Configuring paths and parameters...")
+IMG_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/segmented_output"
+CSV_PATH = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/full_mammogram_paths.csv"
 
-class MammogramDataset(Dataset):
-    def __init__(self, dataframe, transform=None):
-        self.dataframe = dataframe
+class SegmentedDataset(Dataset):
+    def __init__(self, dataframe, img_dir, transform=None):
+        self.dataframe = dataframe.reset_index(drop=True)
+        self.img_dir = img_dir
         self.transform = transform
-        self.dataframe['pathology'] = self.dataframe['pathology'].replace('BENIGN_WITHOUT_CALLBACK', 'BENIGN')
-        self.dataframe['label'] = self.dataframe['pathology'].map({'BENIGN': 0, 'MALIGNANT': 1})
 
     def __len__(self):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
-        relative_path = self.dataframe.iloc[idx]['full_path']
-        flat_name = relative_path.replace("/", "_") + "_segmented.png"
-        segmented_path = os.path.join(SEGMENTED_DIR, flat_name)
-        label = self.dataframe.iloc[idx]['label']
+        while idx < len(self.dataframe):
+            try:
+                row = self.dataframe.iloc[idx]
+                img_name = os.path.join(self.img_dir, row["full_path"].replace("/", "_") + "_segmented.png")
+                if not os.path.exists(img_name):
+                    print(f"❌ Skipping missing file: {img_name}")
+                    idx += 1
+                    continue
 
-        try:
-            image = Image.open(segmented_path).convert("L")
-        except Exception as e:
-            print(f"⚠️ Failed to load image at {segmented_path}: {e}")
-            new_idx = np.random.randint(0, len(self.dataframe))
-            return self.__getitem__(new_idx)
+                image = Image.open(img_name).convert("RGB")
+                label = int(row["label"])
+                if self.transform:
+                    image = self.transform(image)
+                return image, label
+            except Exception as e:
+                print(f"⚠️ Error loading image at idx {idx}: {e}")
+                idx += 1
 
-        if self.transform:
-            image = self.transform(image)
+        raise IndexError("All entries skipped or invalid.")
 
-        return image, label
-
-# Load only Training data
-csv_path = os.path.join(BASE_DIR, 'data/full_mammogram_paths.csv')
-df = pd.read_csv(csv_path)
-train_df = df[df['full_path'].str.contains('Training')].reset_index(drop=True)
-
-# Transformations for DenseNet
+# === Transformations ===
+print("🖼️ Setting up image transformations...")
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
-    transforms.Grayscale(num_output_channels=3),
-    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize([0.5]*3, [0.5]*3)
+    transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
 ])
 
-# DataLoader for Training Only
-train_dataset = MammogramDataset(train_df, transform=transform)
+# === Load DataFrame and Prepare Dataset ===
+print("📄 Loading and processing CSV file...")
+df = pd.read_csv(CSV_PATH)
+df['pathology'] = df['pathology'].replace("BENIGN_WITHOUT_CALLBACK", "BENIGN")
+df['label'] = df['pathology'].map({"BENIGN": 0, "MALIGNANT": 1})
+df = df[df['full_path'].str.contains("Training")]
+
+print("📊 Splitting dataset into train and validation...")
+train_df, val_df = train_test_split(df, test_size=0.2, stratify=df["label"], random_state=42)
+
+train_dataset = SegmentedDataset(train_df, IMG_DIR, transform)
+val_dataset = SegmentedDataset(val_df, IMG_DIR, transform)
+
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 
-# DenseNet-121 Setup
+# === Load DenseNet121 Model ===
+print("📥 Loading DenseNet121 model...")
+model = models.densenet121(weights="IMAGENET1K_V1")
+model.classifier = nn.Linear(model.classifier.in_features, 2)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-densenet = models.densenet121(pretrained=True)
-densenet.classifier = nn.Linear(densenet.classifier.in_features, 2)
-densenet = densenet.to(device)
+model = model.to(device)
 
+# === Loss & Optimizer ===
+print("⚙️ Setting up loss function and optimizer...")
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(densenet.parameters(), lr=0.0005)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-# Training Loop (No validation)
-EPOCHS = 20
+# === Training Loop ===
+print("🚀 Starting training loop...")
+EPOCHS = 10
 for epoch in range(EPOCHS):
-    print(f"\n🚀 Epoch [{epoch+1}/{EPOCHS}]")
-    densenet.train()
-    total_train, correct_train = 0, 0
+    print(f"\n📚 Epoch {epoch+1}/{EPOCHS}")
+    model.train()
+    running_loss = 0
+    for i, (images, labels) in enumerate(train_loader):
+        images, labels = images.to(device), labels.to(device)
 
-    for imgs, labels in train_loader:
-        imgs, labels = imgs.to(device), labels.to(device)
         optimizer.zero_grad()
-        outputs = densenet(imgs)
+        outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
-# Save the trained model
-torch.save(densenet.state_dict(), os.path.join(BASE_DIR, 'Segmented_deep_learning/Segmented_deep_learning/densenet121_segmented.pth'))
-print("✅ DenseNet-121 model saved!")
+        running_loss += loss.item()
+        if (i + 1) % 10 == 0 or (i + 1) == len(train_loader):
+            print(f"  🔁 Batch {i+1}/{len(train_loader)} - Loss: {loss.item():.4f}")
+
+    print(f"✅ Epoch {epoch+1} Complete - Average Loss: {running_loss/len(train_loader):.4f}")
+
+# === Save Model ===
+torch.save(model.state_dict(), "densenet121_segmented_model.pth")
+print("\n💾 DenseNet121 model trained and saved to: densenet121_segmented_model.pth")

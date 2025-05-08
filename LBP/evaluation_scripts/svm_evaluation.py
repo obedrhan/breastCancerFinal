@@ -1,11 +1,12 @@
 import pandas as pd
 import joblib
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from sklearn.preprocessing import LabelEncoder
 
 def load_test_data(test_csv_path):
     df = pd.read_csv(test_csv_path)
 
-    # Normalize labels (include 'BENIGN_WITHOUT_CALLBACK')
+    # Normalize labels
     def normalize_label(label):
         label = label.lower()
         if "malignant" in label:
@@ -18,16 +19,14 @@ def load_test_data(test_csv_path):
     df["Label"] = df["Label"].apply(normalize_label)
     df = df[df["Label"] != "unknown"]
 
-    X_test = df.drop(columns=["Image Path", "Label"]).values
+    X_test = df.drop(columns=["Image Name", "Label"]).values
     y_test = df["Label"].values
-
     return X_test, y_test
 
 if __name__ == "__main__":
-    # Paths
     test_features_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/test_lbp_features.csv"
-    model_path = "/Segmented_deep_learning/LBP/svm_lbp.pkl"
-    scaler_path = "/Segmented_deep_learning/LBP/scaler_svm_lbp.pkl"
+    model_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/LBP/svm_lbp_smote.pkl"
+    scaler_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/LBP/scaler_svm_lbp_smote.pkl"
 
     print("📥 Loading test features...")
     X_test, y_test = load_test_data(test_features_csv)
@@ -36,13 +35,21 @@ if __name__ == "__main__":
     scaler = joblib.load(scaler_path)
     model = joblib.load(model_path)
 
-    # Preprocess test data
+    print("⚙️ Scaling test features...")
     X_test_scaled = scaler.transform(X_test)
+
+    # Encode labels
+    print("🔐 Encoding labels...")
+    le = LabelEncoder()
+    y_test_encoded = le.fit_transform(y_test)
 
     print("📊 Predicting...")
     y_pred = model.predict(X_test_scaled)
 
     # Evaluation
     print("\n✅ Classification Report:")
-    print(classification_report(y_test, y_pred))
-    print(f"✅ Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
+    print(classification_report(y_test_encoded, y_pred, target_names=le.classes_))
+    print(f"✅ Accuracy: {accuracy_score(y_test_encoded, y_pred) * 100:.2f}%")
+
+    print("🧾 Confusion Matrix:")
+    print(confusion_matrix(y_test_encoded, y_pred))

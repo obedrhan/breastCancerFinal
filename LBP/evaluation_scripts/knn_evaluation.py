@@ -29,15 +29,15 @@ def load_test_data(features_file):
     le = LabelEncoder()
     y = le.fit_transform(data["Label"])
 
-    X = data.drop(columns=["Image Path", "Label"]).values
+    X = data.drop(columns=["Image Name", "Label"]).values
     return X, y
 
 if __name__ == "__main__":
     # === Path Setup ===
     BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
     TEST_CSV = os.path.join(BASE_DIR, "test/test_lbp_features.csv")
-    MODEL_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning/knn_model_lbp.pkl")
-    SCALER_PATH = os.path.join(BASE_DIR, "Segmented_deep_learning/scaler_knn_lbp.pkl")
+    MODEL_PATH = os.path.join(BASE_DIR, "models/LBP/knn_lbp_smote.pkl")
+    SCALER_PATH = os.path.join(BASE_DIR, "models/LBP/scaler_knn_lbp_smote.pkl")
 
     # === Load Test Data ===
     print("📂 Loading LBP test features...")

@@ -1,11 +1,10 @@
 import os
-import cv2
 import numpy as np
 import pandas as pd
 from skimage.feature import local_binary_pattern
 from skimage.io import imread
 
-# Define LBP extraction function
+# === Define LBP Extraction Function ===
 def compute_lbp(image, radius=1, n_points=8):
     if image.max() > 1:
         image = (image / image.max() * 255).astype(np.uint8)
@@ -16,22 +15,25 @@ def compute_lbp(image, radius=1, n_points=8):
     hist /= (hist.sum() + 1e-6)
     return hist
 
-# Paths
-base_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-csv_path = os.path.join(base_dir, "data/roi_mask_paths.csv")
+# === Load CSV with image paths and labels ===
+csv_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/data/roi_cropped_with_pathology.csv"
 df = pd.read_csv(csv_path)
 
-# Output data
+# === Output Storage ===
 feature_matrix = []
 image_names = []
 labels = []
 
-# Process only training data
+# === Feature Extraction ===
 for idx, row in df.iterrows():
-    if "Training" not in row['full_path']:
+    image_path = row["image_path"]
+    pathology = row.get("pathology", "")
+    label_type = row.get("label", "").strip().lower()
+
+    # Only process "Training" cropped images with a valid pathology
+    if not isinstance(pathology, str) or "test" not in image_path.lower() or label_type != "cropped":
         continue
 
-    image_path = os.path.join(base_dir, "DDSM_IMAGES/CBIS-DDSM", row['ROI mask file path'])
     if not os.path.exists(image_path):
         print(f"⚠️ File not found: {image_path}")
         continue
@@ -40,7 +42,7 @@ for idx, row in df.iterrows():
         image = imread(image_path, as_gray=True)
         lbp_hist = compute_lbp(image)
 
-        label = row['pathology'].strip().upper()
+        label = pathology.strip().upper()
         if label == "BENIGN_WITHOUT_CALLBACK":
             label = "BENIGN"
 
@@ -53,15 +55,16 @@ for idx, row in df.iterrows():
     except Exception as e:
         print(f"❌ Error processing {image_path}: {e}")
 
-# Save to CSV
+# === Save Feature Matrix to CSV ===
 if feature_matrix:
     columns = [f"Feature_{i+1}" for i in range(len(feature_matrix[0]))]
     df_features = pd.DataFrame(feature_matrix, columns=columns)
     df_features.insert(0, "Image Name", image_names)
     df_features["Label"] = labels
 
-    output_csv_path = os.path.join(base_dir, "cropped_machine_learning/data/lbp_features_cropped.csv")
-    df_features.to_csv(output_csv_path, index=False)
-    print(f"🎉 Feature CSV saved to: {output_csv_path}")
+    output_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/data/lbp_features_cropped_test.csv"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df_features.to_csv(output_path, index=False)
+    print(f"\n🎉 LBP feature CSV saved to:\n{output_path}")
 else:
-    print("⚠️ No features were extracted.")
+    print("\n⚠️ No features were extracted.")
