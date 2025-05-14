@@ -3,17 +3,20 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import pydicom
 import numpy as np
 
+# === CONFIGURATION ===
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
+CSV_PATH = os.path.join(BASE_DIR, "data/roi_cropped_with_pathology.csv")
+MODEL_SAVE_PATH = os.path.join(BASE_DIR, "cropped_deep_learning/models/custom_cnn_cropped.pth")
 
-# Dataset
-class MammogramDataset(Dataset):
+# === Dataset ===
+class CroppedMammogramDataset(Dataset):
     def __init__(self, dataframe, transform=None):
-        self.dataframe = dataframe
+        self.dataframe = dataframe.copy()
         self.transform = transform
         self.dataframe['pathology'] = self.dataframe['pathology'].replace('BENIGN_WITHOUT_CALLBACK', 'BENIGN')
         self.dataframe['label'] = self.dataframe['pathology'].map({'BENIGN': 0, 'MALIGNANT': 1})
@@ -22,8 +25,7 @@ class MammogramDataset(Dataset):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
-        relative_path = self.dataframe.iloc[idx]['full_path']
-        img_path = os.path.join(BASE_DIR, relative_path)
+        img_path = self.dataframe.iloc[idx]['image_path']
         label = self.dataframe.iloc[idx]['label']
 
         try:
@@ -32,11 +34,9 @@ class MammogramDataset(Dataset):
                 raise ValueError("Missing PixelData")
             img_array = dicom.pixel_array.astype(np.float32)
         except Exception as e:
-            # fallback: pick a new random sample
             new_idx = np.random.randint(0, len(self.dataframe))
             return self.__getitem__(new_idx)
 
-        # Normalize image
         img_array -= img_array.min()
         img_array /= (img_array.max() + 1e-6)
         img_array *= 255.0
@@ -46,7 +46,7 @@ class MammogramDataset(Dataset):
             image = self.transform(image)
         return image, label
 
-# Model
+# === CNN Model ===
 class CustomCNN(nn.Module):
     def __init__(self):
         super(CustomCNN, self).__init__()
@@ -68,7 +68,7 @@ class CustomCNN(nn.Module):
         )
         self.classifier = nn.Sequential(
             nn.Dropout(0.5),
-            nn.Linear(128 * 64 * 64, 512),
+            nn.Linear(128 * 16 * 16, 512),
             nn.ReLU(),
             nn.Dropout(0.5),
             nn.Linear(512, 2)
@@ -79,26 +79,24 @@ class CustomCNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.classifier(x)
 
-# Transforms
+# === Transforms ===
 transform = transforms.Compose([
-    transforms.Resize((512, 512)),
+    transforms.Resize((128, 128)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize([0.5], [0.5])
 ])
 
-# Only define dataset and model here, remove training logic
-df = pd.read_csv(os.path.join(BASE_DIR, 'data/full_mammogram_paths.csv'))
-train_df = df[df['full_path'].str.contains('Training')].reset_index(drop=True)
-test_df = df[df['full_path'].str.contains('Test')].reset_index(drop=True)
+# === Load DataFrame and Filter ===
+df = pd.read_csv(CSV_PATH)
+train_df = df[(df['label'] == 'cropped') & (df['image_path'].str.contains('Training'))].reset_index(drop=True)
+test_df = df[(df['label'] == 'cropped') & (df['image_path'].str.contains('Test'))].reset_index(drop=True)
 
-# Optional: Keep dataloaders for reuse
-train_dataset = MammogramDataset(train_df, transform=transform)
-test_dataset = MammogramDataset(test_df, transform=transform)
+train_dataset = CroppedMammogramDataset(train_df, transform=transform)
+test_dataset = CroppedMammogramDataset(test_df, transform=transform)
 
+# === Training ===
 if __name__ == "__main__":
-    from torch.utils.data import DataLoader
-
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
@@ -112,12 +110,8 @@ if __name__ == "__main__":
         print(f"\n Starting Epoch [{epoch+1}/{EPOCHS}]")
         model.train()
         total_train, correct_train = 0, 0
-        batch_counter = 0
-
         for imgs, labels in train_loader:
-            batch_counter += 1
             imgs, labels = imgs.to(device), labels.to(device)
-
             optimizer.zero_grad()
             outputs = model(imgs)
             loss = criterion(outputs, labels)
@@ -128,11 +122,9 @@ if __name__ == "__main__":
             correct_train += (preds == labels).sum().item()
             total_train += labels.size(0)
 
-            if batch_counter % 10 == 0:
-                print(f"   🔄 Batch {batch_counter} | Loss: {loss.item():.4f}")
-
         train_acc = correct_train / total_train * 100
         print(f" Epoch [{epoch+1}/{EPOCHS}] Completed | Train Accuracy: {train_acc:.2f}%")
 
-    torch.save(model.state_dict(), os.path.join(BASE_DIR, 'Segmented_deep_learning/custom_cnn_full_mammo.pth'))
-    print(" Model saved to Segmented_deep_learning/custom_cnn_full_mammo.pth ")
+    os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
+    print(f"✅ Model saved to: {MODEL_SAVE_PATH}")

@@ -41,7 +41,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(resnet.parameters(), lr=0.0005)
 
 #  Train Loop
-EPOCHS = 20
+EPOCHS = 10
 for epoch in range(EPOCHS):
     print(f"\n🚀 Epoch [{epoch+1}/{EPOCHS}]")
     resnet.train()
