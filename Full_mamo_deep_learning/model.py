@@ -1,63 +1,124 @@
-import torch
-import torchvision.transforms as transforms
-from torchvision.models import densenet121, efficientnet_b0
-from transformers import ViTForImageClassification
-from common_utils import MammogramDataset  # your dataset class
-import pandas as pd
 import os
-from torch.utils.data import DataLoader
+import joblib
+import torch
+import torch.nn as nn
+import numpy as np
+from PIL import Image
+import pydicom
+import torchvision.transforms as T
+from torchvision.models import densenet121, efficientnet_b0
+from skimage.feature import hog, local_binary_pattern
 
-def convert_grayscale_to_rgb(img):
-    return img.convert("RGB")
+# — Configure your saved model paths —
+BASE_DIR    = "/Users/ecekocabay/Desktop/2025SPRING/CNG492/DDSM"
+DN121_PATH  = os.path.join(BASE_DIR, "models/full_mamo_deep_learning/densenet_full_mammo.pth")
+EFF_PATH    = os.path.join(BASE_DIR, "models/full_mamo_deep_learning/efficientnet_full_mammo.pth")
+RF_PATH     = os.path.join(BASE_DIR, "models/HOG_LBP/random_forest_model_hog_lbp.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "models/HOG_LBP/scaler_rf_hog_lbp.pkl")
 
-def get_transforms(model_type):
-    if model_type in ["densenet", "efficientnet"]:
-        return transforms.Compose([
-            transforms.Resize((512, 512)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.5], [0.5])
-        ])
-    elif model_type == "vit":
-        return transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.Lambda(convert_grayscale_to_rgb),
-            transforms.ToTensor(),
-            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-        ])
-def get_model_and_loader(model_type, base_dir, batch_size=16):
-    csv_path = os.path.join(base_dir, "data/full_mammogram_paths.csv")
-    df = pd.read_csv(csv_path)
+# — Load ML models —
+rf     = joblib.load(RF_PATH)
+scaler = joblib.load(SCALER_PATH)
 
-    df['pathology'] = df['pathology'].replace('BENIGN_WITHOUT_CALLBACK', 'BENIGN')
-    df['label'] = df['pathology'].map({'BENIGN': 0, 'MALIGNANT': 1})
+# — Load DenseNet121 (1-channel input) —
+dn = densenet121(weights=None)
+dn.features.conv0 = torch.nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+dn.classifier = nn.Linear(dn.classifier.in_features, 2)
+dn.load_state_dict(torch.load(DN121_PATH, map_location="cpu"))
+dn.eval()
 
-    train_df = df[df['full_path'].str.contains("Training")].reset_index(drop=True)
-    test_df = df[df['full_path'].str.contains("Test")].reset_index(drop=True)
+# — Load EfficientNet-B0 (1-channel input) —
+ef = efficientnet_b0(weights=None)
+ef.features[0][0] = torch.nn.Conv2d(1, 32, kernel_size=3, stride=2, padding=1, bias=False)
+ef.classifier[1] = torch.nn.Linear(ef.classifier[1].in_features, 2)
+ef.load_state_dict(torch.load(EFF_PATH, map_location="cpu"))
+ef.eval()
 
-    transform = get_transforms(model_type)
+# — Ensemble weights —
+WEIGHTS = {
+    "random_forest": 0.6376,
+    "densenet":      0.6140,
+    "efficientnet":  0.6915
+}
 
-    train_dataset = MammogramDataset(train_df, transform=transform)
-    test_dataset = MammogramDataset(test_df, transform=transform)
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+# — Preprocessing Functions —
+def load_full_image(path, model_type):
+    """
+    Load a DICOM at `path`, normalize to [0,255], convert to grayscale tensor
+    of shape (1,1,H,W) for DenseNet or EfficientNet.
+    """
+    dcm = pydicom.dcmread(path, force=True)
+    arr = dcm.pixel_array.astype(np.float32)
+    arr -= arr.min()
+    arr /= (arr.max() + 1e-6)
+    arr *= 255
+    img = Image.fromarray(arr.astype(np.uint8)).convert("L")  # grayscale
 
     if model_type == "densenet":
-        model = densenet121(pretrained=True)
-        model.features.conv0 = torch.nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        model.classifier = torch.nn.Linear(model.classifier.in_features, 2)
-    elif model_type == "efficientnet":
-        model = efficientnet_b0(pretrained=True)
-        model.features[0][0] = torch.nn.Conv2d(1, 32, kernel_size=3, stride=2, padding=1, bias=False)
-        model.classifier[1] = torch.nn.Linear(model.classifier[1].in_features, 2)
-    elif model_type == "vit":
-        model = ViTForImageClassification.from_pretrained(
-            "google/vit-base-patch16-224",
-            num_labels=2,
-            ignore_mismatched_sizes=True
-        )
-    else:
-        raise ValueError(f"Unknown model type: {model_type}")
+        tf = T.Compose([
+            T.Resize((512, 512)),
+            T.ToTensor(),
+            T.Normalize([0.5], [0.5])  # 1-channel
+        ])
+    else:  # efficientnet
+        tf = T.Compose([
+            T.Resize((224, 224)),
+            T.ToTensor(),
+            T.Normalize([0.5], [0.5])  # 1-channel
+        ])
+    return tf(img).unsqueeze(0)  # add batch dimension
 
-    return model, train_loader, test_loader
+def load_cropped_image(arr):
+    """
+    Given a uint8 ROI array (0–255), compute HOG + LBP histogram
+    and return a 1D numpy feature vector.
+    """
+    hog_feats = hog(
+        arr,
+        orientations=9,
+        pixels_per_cell=(8,8),
+        cells_per_block=(2,2),
+        feature_vector=True
+    )
+    lbp      = local_binary_pattern(arr, P=8, R=1, method="uniform")
+    n_bins   = int(lbp.max() + 1)
+    hist, _  = np.histogram(
+        lbp,
+        bins=n_bins,
+        range=(0, n_bins),
+        density=True
+    )
+    return np.hstack([hog_feats, hist])
+
+# — Prediction Function —
+def predict_mammogram(full_path, cropped_arr):
+    """
+    full_path: path to the original DICOM
+    cropped_arr: numpy array of segmented ROI (uint8)
+    """
+    # — Random Forest on ROI —
+    feats  = load_cropped_image(cropped_arr).reshape(1, -1)
+    p_rf   = rf.predict_proba(scaler.transform(feats))[0, 1]
+
+    # — DenseNet121 on full image —
+    inp_dn = load_full_image(full_path, "densenet")
+    with torch.no_grad():
+        out_dn = dn(inp_dn)
+        p_dn   = torch.softmax(out_dn, dim=1)[0, 1].item()
+
+    # — EfficientNet-B0 on full image —
+    inp_ef = load_full_image(full_path, "efficientnet")
+    with torch.no_grad():
+        out_ef = ef(inp_ef)
+        p_ef   = torch.softmax(out_ef, dim=1)[0, 1].item()
+
+    # — Weighted ensemble —
+    total_w = sum(WEIGHTS.values())
+    score   = (
+        p_rf * WEIGHTS["random_forest"] +
+        p_dn * WEIGHTS["densenet"] +
+        p_ef * WEIGHTS["efficientnet"]
+    ) / total_w
+
+    pred    = "malignant" if score >= 0.5 else "benign"
+    return {"prediction": pred, "confidence": float(score)}

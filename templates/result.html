@@ -35,7 +35,7 @@
             color: #333;
         }
         img {
-            max-width: 100%;
+            max-width: 90%;
             height: auto;
             border: 2px solid #ccc;
             border-radius: 8px;
@@ -94,12 +94,12 @@
         <p><strong>Segmented Image:</strong></p>
         <img src="{{ segmented_image }}" alt="Segmented Image">
 
-        <p class="prediction-label">Predicted Class: <span>{{ prediction }}</span></p>
+        <p class="prediction-label">Predicted Class: <span>{{ prediction.upper() }}</span></p>
 
         <p>
             Confidence Score:
             <span class="confidence {{ 'low-confidence' if confidence < 70 else '' }}">
-                {{ confidence }}%
+                {{ '{:.2f}'.format(confidence) }}%
             </span>
         </p>
     </div>
