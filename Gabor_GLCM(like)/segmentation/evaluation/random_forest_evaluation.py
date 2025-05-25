@@ -9,7 +9,7 @@ BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
 MODEL_DIR = os.path.join(BASE_DIR, "Gabor_GLCM(like)/models")
 FEATURE_CSV = os.path.join(BASE_DIR, "Gabor_GLCM(like)/data/glcm_gabor_features_segmented_test.csv")  # Adjust if needed
 
-# === Load test data ===
+# === Load evaluation_test data ===
 df = pd.read_csv(FEATURE_CSV)
 X_test = df.drop(columns=["Image Name", "Label"]).values
 y_test = df["Label"].values
@@ -21,7 +21,7 @@ scaler_path = os.path.join(MODEL_DIR, "scaler_rf_gabor_glcm_segmented.pkl")
 rf_model = joblib.load(model_path)
 scaler = joblib.load(scaler_path)
 
-# === Scale test features ===
+# === Scale evaluation_test features ===
 X_scaled = scaler.transform(X_test)
 
 # === Prediction ===

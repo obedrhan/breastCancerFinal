@@ -33,10 +33,10 @@ def load_test_data(csv_path):
     return X, y
 
 if __name__ == "__main__":
-    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/hog_features_segmented.csv"
+    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/evaluation_test/hog_features_segmented.csv"
     model_dir = ("/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/Segmented_deep_learning/HOG")
 
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and KNN model...")

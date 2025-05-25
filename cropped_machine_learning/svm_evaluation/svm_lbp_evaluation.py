@@ -29,14 +29,14 @@ if __name__ == "__main__":
     model_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models/svm_lbp_cropped.pkl"
     scaler_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models//scaler_svm_lbp_cropped.pkl"
 
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(test_features_csv)
 
     print("🔄 Loading scaler and model...")
     scaler = joblib.load(scaler_path)
     model = joblib.load(model_path)
 
-    # Preprocess test data
+    # Preprocess evaluation_test data
     X_test_scaled = scaler.transform(X_test)
 
     print("📊 Predicting...")

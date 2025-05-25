@@ -41,7 +41,7 @@ features = []
 image_names = []
 labels = []
 
-# === Process cropped test images ===
+# === Process cropped evaluation_test images ===
 for idx, row in tqdm(df.iterrows(), total=len(df)):
     image_path = row.get("image_path", "")
     label_type = str(row.get("label", "")).strip().lower()

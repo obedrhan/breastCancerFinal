@@ -6,7 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 
 def load_test_data(features_file):
     data = pd.read_csv(features_file)
-    print("📑 Loaded test CSV with columns:", data.columns)
+    print("📑 Loaded evaluation_test CSV with columns:", data.columns)
 
     # Normalize labels
     def normalize_label(label):
@@ -37,9 +37,9 @@ def load_test_data(features_file):
     return X, y
 
 if __name__ == "__main__":
-    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/combined_hog_lbp_features.csv"
+    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/evaluation_test/combined_hog_lbp_features.csv"
 
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and KNN model...")
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     knn_model = joblib.load(os.path.join(model_dir, "knn_lbp_hog.pkl"))
     scaler = joblib.load(os.path.join(model_dir, "scaler_knn_hog_lbp.pkl"))
 
-    print("🧪 Scaling test data...")
+    print("🧪 Scaling evaluation_test data...")
     X_test_scaled = scaler.transform(X_test)
 
     print("📊 Predicting...")

@@ -24,18 +24,18 @@ def load_test_data(test_csv_path):
     return X_test, y_test
 
 if __name__ == "__main__":
-    test_features_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/test_lbp_features.csv"
+    test_features_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/evaluation_test/test_lbp_features.csv"
     model_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/LBP/svm_lbp_smote.pkl"
     scaler_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/LBP/scaler_svm_lbp_smote.pkl"
 
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(test_features_csv)
 
     print("🔄 Loading scaler and model...")
     scaler = joblib.load(scaler_path)
     model = joblib.load(model_path)
 
-    print("⚙️ Scaling test features...")
+    print("⚙️ Scaling evaluation_test features...")
     X_test_scaled = scaler.transform(X_test)
 
     # Encode labels

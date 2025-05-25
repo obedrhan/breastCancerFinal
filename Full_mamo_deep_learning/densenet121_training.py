@@ -64,7 +64,7 @@ for epoch in range(EPOCHS):
     print(f" Train Accuracy: {train_acc:.2f}%")
 
 # Evaluation
-print("\n🧪 Evaluating on test set...")
+print("\n🧪 Evaluating on evaluation_test set...")
 densenet.eval()
 total_test, correct_test = 0, 0
 with torch.no_grad():

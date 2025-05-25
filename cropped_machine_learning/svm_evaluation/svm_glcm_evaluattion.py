@@ -36,7 +36,7 @@ if __name__ == "__main__":
     test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/data/glcm_features_mahotas_test.csv"
     model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models"
 
-    print("📥 Loading GLCM test features...")
+    print("📥 Loading GLCM evaluation_test features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and SVM model...")

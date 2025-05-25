@@ -74,7 +74,7 @@ if __name__ == "__main__":
     lbp_df.insert(0, "Image Path", paths)
     lbp_df["Label"] = y_test
     lbp_df.to_csv(os.path.join(BASE_DIR, "test_lbp_features.csv"), index=False)
-    print(" Saved extracted test LBP features to test_lbp_features.csv")
+    print(" Saved extracted evaluation_test LBP features to test_lbp_features.csv")
 
     models = ["knn_model_ddsm.pkl", "svm_model_ddsm.pkl", "random_forest_model_ddsm.pkl"]
 

@@ -32,10 +32,10 @@ def load_test_data(csv_path):
 
 if __name__ == "__main__":
     # Paths
-    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/hog_features_segmented.csv"
+    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/evaluation_test/hog_features_segmented.csv"
     model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/HOG"
 
-    print("📥 Loading test HOG features...")
+    print("📥 Loading evaluation_test HOG features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and SVM model...")

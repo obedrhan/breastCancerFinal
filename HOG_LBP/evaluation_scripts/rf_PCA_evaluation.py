@@ -5,15 +5,15 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import LabelEncoder
 
 # === Config ===
-TEST_CSV = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/combined_hog_lbp_features.csv"
+TEST_CSV = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/evaluation_test/combined_hog_lbp_features.csv"
 SCALER_PATH = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/scaler_rf_hog_lbp_pca.pkl"
 PCA_PATH = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/pca_rf_hog_lbp.pkl"
 MODEL_PATH = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/HOG_LBP/random_forest_hog_lbp_pca.pkl"
 
-# === Load and preprocess test data ===
+# === Load and preprocess evaluation_test data ===
 def load_test_data(features_file):
     data = pd.read_csv(features_file)
-    print("📑 Loaded test CSV with columns:", data.columns)
+    print("📑 Loaded evaluation_test CSV with columns:", data.columns)
 
     # Normalize labels
     def normalize_label(label):
@@ -49,7 +49,7 @@ def load_test_data(features_file):
 
 # === Evaluation Pipeline ===
 if __name__ == "__main__":
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(TEST_CSV)
 
     print("🔄 Loading scaler, PCA, and model...")
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     pca = joblib.load(PCA_PATH)
     model = joblib.load(MODEL_PATH)
 
-    print("⚙️ Scaling and transforming test data...")
+    print("⚙️ Scaling and transforming evaluation_test data...")
     X_scaled = scaler.transform(X_test)
     X_pca = pca.transform(X_scaled)
 

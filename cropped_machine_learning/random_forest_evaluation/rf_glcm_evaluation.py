@@ -36,14 +36,14 @@ if __name__ == "__main__":
     test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/data/glcm_features_mahotas_test.csv"
     model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models"
 
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and Random Forest model...")
     scaler = joblib.load(os.path.join(model_dir, "scaler_rf_glcm_cropped.pkl"))
     rf_model = joblib.load(os.path.join(model_dir, "random_forest_cropped_glcm.pkl"))
 
-    print("🧪 Scaling test data...")
+    print("🧪 Scaling evaluation_test data...")
     X_test_scaled = scaler.transform(X_test)
 
     print("📊 Predicting...")

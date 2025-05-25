@@ -65,7 +65,6 @@ def register():
     conn.close()
     return jsonify(message="Registered"), 200
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -87,7 +86,6 @@ def login():
     session.permanent = True
     session['user_id'] = row[0]
     return jsonify(message="Logged in"), 200
-
 
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -161,7 +159,6 @@ def process():
     except Exception as e:
         print("🔥 Error in /process:", e)
         return jsonify(error=str(e)), 500
-
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

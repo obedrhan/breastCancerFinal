@@ -9,7 +9,7 @@ features_file = ("/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_mach
 model_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models/random_forest_lbp_cropped.pkl"
 scaler_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models/scaler_rf_lbp_cropped.pkl"
 
-# === Load and preprocess test data ===
+# === Load and preprocess evaluation_test data ===
 def load_data(path):
     df = pd.read_csv(path)
 
@@ -33,14 +33,14 @@ def load_data(path):
 
 # === Main Evaluation ===
 if __name__ == "__main__":
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_data(features_file)
 
     print("🧪 Loading model and scaler...")
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
 
-    print("⚙️ Scaling test features...")
+    print("⚙️ Scaling evaluation_test features...")
     X_test_scaled = scaler.transform(X_test)
 
     print("🔍 Predicting...")

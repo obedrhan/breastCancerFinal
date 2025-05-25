@@ -86,7 +86,7 @@ transform = transforms.Compose([
     transforms.Normalize([0.5], [0.5])
 ])
 
-# === Load test set
+# === Load evaluation_test set
 df = pd.read_csv(CSV_PATH)
 test_df = df[(df['label'] == 'cropped') & (df['image_path'].str.contains('Test'))].reset_index(drop=True)
 test_dataset = CroppedMammogramDataset(test_df, transform=transform)

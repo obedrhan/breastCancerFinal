@@ -36,7 +36,7 @@ if __name__ == "__main__":
     test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/data/hog_features_cropped_test.csv"
     model_dir = ("/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/cropped_machine_learning/models")
 
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading scaler and KNN model...")

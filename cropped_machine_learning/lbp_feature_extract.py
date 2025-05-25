@@ -31,7 +31,7 @@ for idx, row in df.iterrows():
     label_type = row.get("label", "").strip().lower()
 
     # Only process "Training" cropped images with a valid pathology
-    if not isinstance(pathology, str) or "test" not in image_path.lower() or label_type != "cropped":
+    if not isinstance(pathology, str) or "evaluation_test" not in image_path.lower() or label_type != "cropped":
         continue
 
     if not os.path.exists(image_path):

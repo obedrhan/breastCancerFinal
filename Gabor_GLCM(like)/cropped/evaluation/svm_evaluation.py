@@ -9,7 +9,7 @@ BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
 MODEL_DIR = os.path.join(BASE_DIR, "Gabor_GLCM(like)/models")
 FEATURE_CSV = os.path.join(BASE_DIR, "Gabor_GLCM(like)/data/glcm_gabor_features_cropped_test.csv")  # Change path as needed
 
-# === Load test feature data ===
+# === Load evaluation_test feature data ===
 df = pd.read_csv(FEATURE_CSV)
 X_test = df.drop(columns=["Image Name", "Label"]).values
 y_test = df["Label"].values

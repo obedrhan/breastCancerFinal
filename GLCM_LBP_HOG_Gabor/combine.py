@@ -3,8 +3,8 @@ import os
 
 # === File paths ===
 base_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-lbp_path = os.path.join(base_path, "test/test_lbp_features.csv")
-hog_path = os.path.join(base_path, "test/hog_features_segmented.csv")
+lbp_path = os.path.join(base_path, "evaluation_test/test_lbp_features.csv")
+hog_path = os.path.join(base_path, "evaluation_test/hog_features_segmented.csv")
 glcm_gabor_path = os.path.join(base_path, "GABOR_GLCM/data/glcm_gabor_features_segmented_test.csv")
 output_path = os.path.join(base_path, "GLCM_LBP_HOG_Gabor/data/combined_features_test.csv")
 

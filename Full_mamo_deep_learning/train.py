@@ -16,14 +16,14 @@ def train_model(model, train_loader, val_loader, device, save_path, num_epochs=1
             images, labels = images.to(device), labels.to(device)
 
             outputs = model(images)
-            loss = criterion(outputs.logits, labels)
+            loss = criterion(outputs, labels)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             running_loss += loss.item()
-            _, preds = torch.max(outputs.logits, 1)
+            _, preds = torch.max(outputs, 1)
             correct += (preds == labels).sum().item()
             total += labels.size(0)
 

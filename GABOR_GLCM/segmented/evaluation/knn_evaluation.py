@@ -10,7 +10,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "knn_gabor_glcm_segmented.pkl")
 SCALER_PATH = os.path.join(MODEL_DIR, "scaler_knn_gabor_glcm_segmented.pkl")
 
 # === LOAD TEST DATA ===
-print("📄 Loading test dataset...")
+print("📄 Loading evaluation_test dataset...")
 df = pd.read_csv(TEST_CSV)
 X_test = df.drop(columns=["Image Name", "Label"]).values
 y_test = df["Label"].values

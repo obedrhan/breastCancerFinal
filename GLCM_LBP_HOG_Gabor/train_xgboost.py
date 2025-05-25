@@ -2,7 +2,7 @@ import pandas as pd
 import joblib
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-# === Load test data ===
+# === Load evaluation_test data ===
 X_test = pd.read_csv("X_pca_test.csv").values
 y_test = pd.read_csv("y_test.csv")["Label"].values
 

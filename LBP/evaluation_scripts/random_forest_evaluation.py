@@ -5,11 +5,11 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 # === Configuration ===
-features_file = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/test_lbp_features.csv"
+features_file = "/evaluation_test/test_lbp_features.csv"
 model_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/LBP/random_forest_lbp_smote.pkl"
 scaler_path = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/LBP/scaler_rf_lbp_smote.pkl"
 
-# === Load and preprocess test data ===
+# === Load and preprocess evaluation_test data ===
 def load_data(path):
     df = pd.read_csv(path)
 
@@ -31,14 +31,14 @@ def load_data(path):
 
 # === Main Evaluation ===
 if __name__ == "__main__":
-    print("📥 Loading test features...")
+    print("📥 Loading evaluation_test features...")
     X_test, y_test = load_data(features_file)
 
     print("🧪 Loading model and scaler...")
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
 
-    print("⚙️ Scaling test features...")
+    print("⚙️ Scaling evaluation_test features...")
     X_test_scaled = scaler.transform(X_test)
 
     print("🔐 Encoding labels...")

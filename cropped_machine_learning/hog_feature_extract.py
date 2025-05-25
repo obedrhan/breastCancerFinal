@@ -23,13 +23,13 @@ features = []
 image_names = []
 labels = []
 
-# === Process each image (only test + cropped) ===
+# === Process each image (only evaluation_test + cropped) ===
 for idx, row in tqdm(df.iterrows(), total=len(df)):
     image_path = row["image_path"]
     image_type = str(row.get("label", "")).strip().lower()  # 'roi' or 'cropped'
 
     # Only process TEST and CROPPED images
-    if "test" not in image_path.lower() or image_type != "cropped":
+    if "evaluation_test" not in image_path.lower() or image_type != "cropped":
         continue
 
     if not os.path.exists(image_path):

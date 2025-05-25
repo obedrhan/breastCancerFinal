@@ -4,7 +4,7 @@ from training_scripts.deep_learning.cnn_training import CustomCNN
 # Base directory
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
 MODELS_DIR = os.path.join(BASE_DIR, "Segmented_deep_learning/Segmented_deep_learning")
-LBP_CSV = os.path.join(BASE_DIR, "test/test_lbp_features.csv")
+LBP_CSV = os.path.join(BASE_DIR, "evaluation_test/test_lbp_features.csv")
 DL_CSV = os.path.join(BASE_DIR, "data/full_mammogram_paths.csv")
 
 # ========================================
@@ -223,10 +223,10 @@ def evaluate_dl(model, model_name, loader):
             _, preds = torch.max(outputs, 1)
             correct += (preds == labels).sum().item()
             total += labels.size(0)
-    print(f"✅ {model_name} Accuracy on segmented test images: {correct / total * 100:.2f}%")
+    print(f"✅ {model_name} Accuracy on segmented evaluation_test images: {correct / total * 100:.2f}%")
 
 # === Run Evaluation ===
-print(f"\n📊 Evaluating on {len(test_dataset_cnn)} segmented test images...")
+print(f"\n📊 Evaluating on {len(test_dataset_cnn)} segmented evaluation_test images...")
 evaluate_dl(cnn, "Custom CNN", test_loader_cnn)
 evaluate_dl(resnet, "ResNet18", test_loader_resnet)
 evaluate_dl(densenet, "DenseNet121", test_loader_resnet)

@@ -35,12 +35,12 @@ def load_test_data(features_file):
 if __name__ == "__main__":
     # === Path Setup ===
     BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-    TEST_CSV = os.path.join(BASE_DIR, "test/test_lbp_features.csv")
+    TEST_CSV = os.path.join(BASE_DIR, "evaluation_test/test_lbp_features.csv")
     MODEL_PATH = os.path.join(BASE_DIR, "models/LBP/knn_lbp_smote.pkl")
     SCALER_PATH = os.path.join(BASE_DIR, "models/LBP/scaler_knn_lbp_smote.pkl")
 
     # === Load Test Data ===
-    print("📂 Loading LBP test features...")
+    print("📂 Loading LBP evaluation_test features...")
     X_test, y_test = load_test_data(TEST_CSV)
 
     # === Load Scaler and Model ===

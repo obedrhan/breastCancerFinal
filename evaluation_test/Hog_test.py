@@ -11,7 +11,7 @@ from tqdm import tqdm
 BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
 SEGMENTED_DIR = os.path.join(BASE_DIR, "segmented_Test_output")
 CSV_PATH = os.path.join(BASE_DIR, "data/full_mammogram_paths.csv")
-OUTPUT_CSV = os.path.join(BASE_DIR, "test/hog_features_segmented.csv")
+OUTPUT_CSV = os.path.join(BASE_DIR, "evaluation_test/hog_features_segmented.csv")
 
 # === Load metadata (for labels) ===
 df = pd.read_csv(CSV_PATH)

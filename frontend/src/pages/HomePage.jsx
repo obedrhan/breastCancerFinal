@@ -83,7 +83,7 @@ function HomePage() {
           <h3>Prediction Result</h3>
           <p><strong>Prediction:</strong> {result.prediction.toUpperCase()}</p>
           <p><strong>Confidence:</strong> {result.confidence}%</p>
-          <img src={result.image_url} alt="Segmented Output" />
+          <img src={result.image_url} alt="Segmented Output" className="segmented-image" />
         </div>
       )}
     </div>

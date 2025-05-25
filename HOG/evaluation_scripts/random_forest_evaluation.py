@@ -34,17 +34,17 @@ def load_test_data(features_file):
 
 if __name__ == "__main__":
     # === File paths ===
-    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test/hog_features_segmented.csv"
+    test_csv = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/evaluation_test/hog_features_segmented.csv"
     model_dir = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/models/HOG"
 
-    print("📥 Loading test HOG features...")
+    print("📥 Loading evaluation_test HOG features...")
     X_test, y_test = load_test_data(test_csv)
 
     print("🔄 Loading trained Random Forest and scaler...")
     scaler = joblib.load(os.path.join(model_dir, "scaler_rf_hog.pkl"))
     model = joblib.load(os.path.join(model_dir, "random_forest_model_hog.pkl"))
 
-    print("🧪 Evaluating on test set...")
+    print("🧪 Evaluating on evaluation_test set...")
     X_test_scaled = scaler.transform(X_test)
     y_pred = model.predict(X_test_scaled)
 

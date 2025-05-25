@@ -31,7 +31,7 @@ for idx, row in tqdm(df.iterrows(), total=len(df)):
     print(f"\n🔍 [{idx}] Checking image: {image_path}")
     print(f"    ⮞ Label: {image_type}")
 
-    if "test" not in image_path.lower() or image_type != "cropped":
+    if "evaluation_test" not in image_path.lower() or image_type != "cropped":
         print("    ⏭️ Skipped (not 'training' or not 'cropped')")
         continue
 

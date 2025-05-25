@@ -40,7 +40,7 @@ if __name__ == "__main__":
     SCALER_PATH = os.path.join(BASE_DIR, "cropped_machine_learning/models/scaler_knn_lbp_cropped.pkl")
 
     # === Load Test Data ===
-    print("📂 Loading LBP test features...")
+    print("📂 Loading LBP evaluation_test features...")
     X_test, y_test = load_test_data(TEST_CSV)
 
     # === Load Scaler and Model ===
