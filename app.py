@@ -4,7 +4,8 @@ import re
 import uuid
 from datetime import datetime, timedelta
 from flask import (
-    Flask, request, session, jsonify, send_from_directory, url_for
+    Flask, request, session, jsonify,
+    send_from_directory, url_for
 )
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -12,23 +13,28 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from skimage.io import imsave
 
 from segmentation_feature import (
-    load_dicom_as_image, contrast_enhancement, region_growing,
-    morphological_operations, contour_extraction, crop_image_with_contours
+    load_dicom_as_image, contrast_enhancement,
+    region_growing, morphological_operations,
+    contour_extraction, crop_image_with_contours
 )
 from new_predict import predict_mammogram
 
-# === Flask App Setup ===
-app = Flask(__name__)
+# React build klasörünün yolu
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+REACT_BUILD = os.path.join(BASE_DIR, 'frontend', 'dist')
+
+# Flask uygulaması: static_folder ve static_url_path ayarlandı
+app = Flask(__name__, static_folder=REACT_BUILD, static_url_path='')
 app.secret_key = 'your_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
-
-# ✅ Crucial for React to maintain session cookies
+# React ile aynı site içinde çerez paylaşımı için
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
 
 CORS(app, supports_credentials=True)
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads")
+# .dcm dosyalarının yükleneceği klasör
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'dcm'}
@@ -47,7 +53,7 @@ def register():
     if not fullname or not email or not password:
         return jsonify(error="Missing fields"), 400
 
-    pw_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$'
+    pw_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$'
     if not re.match(pw_regex, password):
         return jsonify(error="Password must be 8+ characters with upper, lower, number"), 400
 
@@ -95,7 +101,6 @@ def logout():
 # === Mammogram Upload & Prediction ===
 @app.route('/process', methods=['POST'])
 def process():
-    print("📦 Session user_id =", session.get('user_id'))
     if 'user_id' not in session:
         return jsonify(error="Unauthorized"), 403
 
@@ -131,7 +136,7 @@ def process():
         # Prediction
         result = predict_mammogram(full_path, cropped)
 
-        # Database
+        # Veritabanı işlemleri
         conn = sqlite3.connect('radiologist_system.db')
         c = conn.cursor()
         c.execute('SELECT 1 FROM Patients WHERE national_id=?', (national_id,))
@@ -164,7 +169,6 @@ def process():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# === View Previous Results ===
 @app.route('/view_previous', methods=['POST'])
 def view_previous():
     if 'user_id' not in session:
@@ -204,6 +208,14 @@ def view_previous():
         for row in rows
     ])
 
-# === Run App ===
+# React SPA catch-all
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react(path):
+    full_path = os.path.join(REACT_BUILD, path)
+    if path and os.path.exists(full_path):
+        return send_from_directory(REACT_BUILD, path)
+    return send_from_directory(REACT_BUILD, 'index.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)
