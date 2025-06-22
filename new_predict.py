@@ -11,11 +11,11 @@ from torchvision.models import densenet121, efficientnet_b0
 from skimage.feature import hog, local_binary_pattern
 
 # === Model Paths ===
-BASE_DIR = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM"
-DN121_PATH = os.path.join(BASE_DIR, "models/full_mamo_deep_learning/densenet_full_mammo.pth")
-EFF_PATH = os.path.join(BASE_DIR, "models/full_mamo_deep_learning/efficientnet_full_mammo.pth")
-RF_PATH = os.path.join(BASE_DIR, "models/HOG_LBP/random_forest_model_hog_lbp.pkl")
-SCALER_PATH = os.path.join(BASE_DIR, "models/HOG_LBP/scaler_rf_hog_lbp.pkl")
+BASE_DIR = "/Users/Bedirhan/Desktop/BreastCancer"
+DN121_PATH = os.path.join(BASE_DIR, "Models/densenet_full_mammo.pth")
+EFF_PATH = os.path.join(BASE_DIR, "Models/efficientnet_full_mammo.pth")
+RF_PATH = os.path.join(BASE_DIR, "Models/random_forest_model_hog_lbp.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "Models/scaler_rf_hog_lbp.pkl")
 
 # === Load Random Forest & Scaler ===
 rf = joblib.load(RF_PATH)
