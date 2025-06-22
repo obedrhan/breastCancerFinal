@@ -1,168 +1,129 @@
 import os
-import numpy as np
 import cv2
+import numpy as np
 import pydicom
 import torch
+import torch.nn.functional as F
+from tqdm import tqdm
+from skimage.filters import threshold_otsu
+from skimage.morphology import closing, disk
+from skimage.measure import label, regionprops
+from torchvision.transforms import InterpolationMode
 from PIL import Image
-import torchvision.transforms as T
-from skimage.morphology import remove_small_objects, opening, disk
+from new_unet import DSAttentionUNet  # your model definition
 
-# ───────── CONFIG ────────────────────────────────────────────────
-# Initialize paths directly here:
-INPUT_PATH    = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test_samples/test_image2.dcm"
-OUTPUT_DIR    = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/test_samples/test_mask2.dcm"
-WEIGHTS_PATH  = "/Users/ecekocabay/Desktop/2025SPRING/ CNG492/DDSM/transformer_unet.pth"
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else
+                      "mps"  if torch.backends.mps.is_available() else
+                      "cpu")
+MODEL_PATH = "patch_ds_attention_unet5.pth"
 
-DEVICE       = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-IMG_SIZE     = 512        # model input / output size
-THRESHOLD    = 0.10       # binarization cutoff
-MIN_OBJ_SIZE = 50         # drop tiny islands
-PADDING      = 20         # pixels around lesion box
-
-# ───────── MODEL IMPORT ─────────────────────────────────────────────
-from train_unet import DSAttentionUNet
-
-def load_model(path):
-    model = DSAttentionUNet().to(DEVICE)
-    state = torch.load(path, map_location=DEVICE)
-    model.load_state_dict(state)
-    model.eval()
-    return model
-
-# ───────── IMAGE I/O & BREAST CROP ─────────────────────────────────
+# ───────── UTILS ────────────────────────────────────────
 def load_image(path):
-    if path.lower().endswith('.dcm'):
-        d = pydicom.dcmread(path, force=True)
-        arr = d.pixel_array.astype(np.float32)
-        return (arr - arr.min())/(arr.max() - arr.min() + 1e-8)
-    else:
-        img = np.array(Image.open(path).convert('L'), dtype=np.float32)
-        return img/255.0
+    ds = pydicom.dcmread(path, force=True)
+    img = ds.pixel_array.astype(np.float32)
+    img = (img - img.min())/(img.max()-img.min()+1e-8)
+    return img
 
-def breast_crop(img):
-    """
-    Otsu threshold + opening to find the breast region
-    Returns: (crop, (bx,by,bw,bh)) in original coords
-    """
+def compute_breast_mask(img):
+    """Coarse breast mask via Otsu + morphological closing."""
     u8 = (img*255).astype(np.uint8)
-    _, thr = cv2.threshold(u8, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    clean = opening(thr, disk(15))
-    cnts, _ = cv2.findContours(clean.astype(np.uint8),
-                               cv2.RETR_EXTERNAL,
-                               cv2.CHAIN_APPROX_SIMPLE)
-    if not cnts:
-        # fallback: whole image
-        H,W = img.shape
-        return img, (0,0,W,H)
-    cnt = max(cnts, key=cv2.contourArea)
-    x,y,w,h = cv2.boundingRect(cnt)
-    return img[y:y+h, x:x+w], (x,y,w,h)
+    thr = threshold_otsu(u8)
+    m = (u8 >= thr).astype(np.uint8)
+    # close small holes
+    m = closing(m, selem=disk(25))
+    return m
 
-# ───────── INFERENCE ON BREAST CROP ────────────────────────────────
-def predict_on_crop(model, crop):
-    Hc,Wc = crop.shape
-    pil = Image.fromarray((crop*255).astype(np.uint8))
-    small = pil.resize((IMG_SIZE,IMG_SIZE), Image.BILINEAR)
-    tensor = T.ToTensor()(small).unsqueeze(0).to(DEVICE)
-    with torch.no_grad():
-        out, *_ = model(tensor)
-        prob_small = torch.sigmoid(out)[0,0].cpu().numpy()
-    # back to original crop resolution
-    prob = cv2.resize(prob_small, (Wc,Hc), interpolation=cv2.INTER_LINEAR)
-    return prob
+def remove_small_and_keep_largest(bin_mask, min_size=1000):
+    lbl = label(bin_mask)
+    out = np.zeros_like(bin_mask)
+    props = regionprops(lbl)
+    # remove small
+    props = [p for p in props if p.area >= min_size]
+    if not props:
+        return out
+    # keep only largest
+    largest = max(props, key=lambda p: p.area).label
+    out[lbl == largest] = 1
+    return out
 
-# ───────── POST-PROCESS & LESION BOX ───────────────────────────────
-def post_process(prob):
-    """
-    1) threshold
-    2) remove tiny specks
-    3) find all CCs
-    4) drop any CC that touches the crop border
-    5) pick the largest remaining CC
-    """
-    binm = prob > THRESHOLD
-    clean = remove_small_objects(binm, min_size=MIN_OBJ_SIZE)
-    cnts, _ = cv2.findContours(clean.astype(np.uint8),
-                               cv2.RETR_EXTERNAL,
-                               cv2.CHAIN_APPROX_SIMPLE)
-    if not cnts:
-        return None, None
+def sliding_window_predict(model, full_img, breast_mask,
+                           patch_size=592, overlap=0.5):
+    H, W = full_img.shape
+    stride = int(patch_size*(1-overlap))
+    # weight window (cosine) to blend seams
+    wx = np.hanning(patch_size)[:,None]
+    wy = np.hanning(patch_size)[None,:]
+    weight = wx * wy
 
-    H,W = clean.shape
-    inside = []
-    for c in cnts:
-        x,y,w,h = cv2.boundingRect(c)
-        # skip if it touches any edge of the crop
-        if x==0 or y==0 or x+w==W or y+h==H:
-            continue
-        inside.append((c, cv2.contourArea(c)))
+    prob_map  = np.zeros((H,W), dtype=np.float32)
+    weight_map= np.zeros((H,W), dtype=np.float32)
 
-    # if none left after border filter, fall back to largest overall
-    if not inside:
-        inside = [(c, cv2.contourArea(c)) for c in cnts]
+    for y in tqdm(range(0, H, stride), desc="Patching Y"):
+        for x in range(0, W, stride):
+            y1 = min(y+patch_size, H)
+            x1 = min(x+patch_size, W)
+            y0 = y1-patch_size
+            x0 = x1-patch_size
+            # skip if no breast in this patch
+            if breast_mask[y0:y1, x0:x1].sum() == 0:
+                continue
 
-    # pick the contour with max area
-    lesion_cnt, _ = max(inside, key=lambda tup: tup[1])
-    x,y,w,h = cv2.boundingRect(lesion_cnt)
-    return (x,y,w,h), clean.astype(np.uint8)
+            # prep input
+            patch = full_img[y0:y1, x0:x1]
+            p = (patch*255).astype(np.uint8)
+            pil = Image.fromarray(p)
+            pil = pil.resize((patch_size,patch_size), Image.BILINEAR)
+            t = torch.from_numpy(np.array(pil)[None,None]/255.0).to(DEVICE).float()
 
-# ───────── CROP, MAP BACK & SAVE ───────────────────────────────────
-def crop_and_save(img, mask, bbox, breast_box):
-    bx,by,_,_ = breast_box
-    x,y,w,h = bbox
+            # forward
+            with torch.no_grad():
+                out,_,_ = model(t)
+                p_out = torch.sigmoid(out)[0,0].cpu().numpy()
 
-    # apply padding inside the crop
-    x0 = max(0, x - PADDING)
-    y0 = max(0, y - PADDING)
-    x1 = min(mask.shape[1], x + w + PADDING)
-    y1 = min(mask.shape[0], y + h + PADDING)
+            # resize back to original patch
+            p_out = cv2.resize(p_out, (patch_size,patch_size), interpolation=cv2.INTER_LINEAR)
+            prob_map[y0:y1, x0:x1]    += p_out * weight
+            weight_map[y0:y1, x0:x1]  += weight
 
-    # map back to full‐image coordinates
-    gx0, gy0 = bx + x0, by + y0
-    gx1, gy1 = bx + x1, by + y1
+    # normalize
+    prob_map /= (weight_map + 1e-8)
+    return prob_map
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    # 1) overlay with green box
-    overlay = (img*255).astype(np.uint8)
-    overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2BGR)
-    cv2.rectangle(overlay, (gx0,gy0), (gx1,gy1), (0,255,0), 2)
-    Image.fromarray(overlay).save(os.path.join(OUTPUT_DIR,'overlay.png'))
-
-    # 2) full‐size mask
-    mask_full = np.zeros_like(img, np.uint8)
-    mask_full[by:by+mask.shape[0], bx:bx+mask.shape[1]] = mask
-    Image.fromarray((mask_full*255).astype(np.uint8)).save(
-        os.path.join(OUTPUT_DIR,'mask.png'))
-
-    # 3) just the lesion crop
-    lesion_crop = img[gy0:gy1, gx0:gx1]
-    Image.fromarray((lesion_crop*255).astype(np.uint8)).save(
-        os.path.join(OUTPUT_DIR,'lesion_crop.png'))
-
-# ───────── MAIN ───────────────────────────────────────────────────
+# ───────── MAIN ─────────────────────────────────────────
 def main():
-    print(f"Loading model from {WEIGHTS_PATH}...")
-    model = load_model(WEIGHTS_PATH)
+    # load
+    model = DSAttentionUNet().to(DEVICE)
+    sd = torch.load(MODEL_PATH, map_location=DEVICE)
+    model.load_state_dict(sd)
+    model.eval()
 
-    print(f"Reading image {INPUT_PATH}...")
-    img = load_image(INPUT_PATH)
+    # path to your DICOM
+    dicom_path = "path/to/your/test.dcm"
+    img = load_image(dicom_path)
 
-    print("Cropping to breast area...")
-    breast, breast_box = breast_crop(img)
+    # 1) breast mask
+    breast_m = compute_breast_mask(img)
 
-    print("Running segmentation on breast crop...")
-    prob = predict_on_crop(model, breast)
+    # 2) sliding-window UNet
+    prob = sliding_window_predict(model, img, breast_m,
+                                  patch_size=592, overlap=0.5)
 
-    print("Post-processing mask to find lesion bbox...")
-    bbox, clean = post_process(prob)
-    if bbox is None:
-        print("No lesion detected.")
-        return
+    # 3) threshold more aggressively
+    bin_mask = (prob > 0.75).astype(np.uint8)
+    # zero-out outside breast
+    bin_mask *= breast_m
 
-    print(f"Lesion bbox in crop coords: {bbox}")
-    crop_and_save(img, clean, bbox, breast_box)
-    print("Done.  Outputs saved in:", OUTPUT_DIR)
+    # 4) clean up
+    bin_mask = remove_small_and_keep_largest(bin_mask, min_size=2000)
 
-if __name__=='__main__':
+    # save outputs
+    cv2.imwrite("full_probability.png",   (prob*255).astype(np.uint8))
+    cv2.imwrite("full_mask.png",          bin_mask*255)
+
+    # overlay
+    rgb = cv2.cvtColor((img*255).astype(np.uint8), cv2.COLOR_GRAY2BGR)
+    rgb[bin_mask==1] = (0,0,255)  # red overlay
+    cv2.imwrite("overlay.png", rgb)
+
+if __name__ == "__main__":
     main()
